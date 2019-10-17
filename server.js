@@ -16,7 +16,7 @@ const app = express();
 // note with heroku deployment you must source port from env
 const port = process.env.PORT || 3000;
 
-// register middleware component
+// register middleware component and deployment
 app.use(logger("dev"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -26,25 +26,27 @@ app.use(express.static("public"));
 // Connect to Atlas in production
 if (process.env.NODE_ENV === "production") {
   uri = process.env.ATLAS_URI;
-} else {  
+} else {
   // localhost
-  uri = process.env.LOCAL_URI  
+  // 
+  uri = process.env.ATLAS_URI;
 }
 
 // database connection ppol
 let db = ""
 let dbName = "notetaker"
-MongoClient.connect(uri, { useNewUrlParser: true,                            
-                           useUnifiedTopology: true }, 
-    (err, client) => 
-      {
-        if (err) {    
-          console.log(err) 
-          return
-        }        
-      console.log("Connected successfully to server") 
-      db = client.db(dbName)   
-});
+MongoClient.connect(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+},
+  (err, client) => {
+    if (err) {
+      console.log(err)
+      return
+    }
+    console.log("Connected successfully to server")
+    db = client.db(dbName)
+  });
 
 
 ////////////////////////
@@ -57,9 +59,9 @@ app.get("/", (req, res) => {
 });
 
 // post a new note
-app.post("/submit", (req, res) => { 
+app.post("/submit", (req, res) => {
   const collection = db.collection('notes')
-  collection.insertOne(req.body, (error, data) => {   
+  collection.insertOne(req.body, (error, data) => {
     if (error) {
       res.send(error);
     } else {
@@ -72,7 +74,7 @@ app.post("/submit", (req, res) => {
 // note the .toArray() function to unpack the objects
 app.get("/all", (req, res) => {
   const collection = db.collection('notes')
-  collection.find({}).toArray((error, data) => {    
+  collection.find({}).toArray((error, data) => {
     if (error) {
       res.send(error);
     } else {
@@ -83,7 +85,7 @@ app.get("/all", (req, res) => {
 
 // get a specific document based on objectid
 app.get("/find/:id", (req, res) => {
-  const collection = db.collection('notes')  
+  const collection = db.collection('notes')
   collection.findOne(
     {
       _id: ObjectId(req.params.id)
